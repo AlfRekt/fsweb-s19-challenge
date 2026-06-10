@@ -25,6 +25,10 @@ public class Tweet extends BaseEntity{
     @JoinColumn(name = "user_id",nullable = false)
     private User user;
 
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH})
+    @JoinColumn(name = "quoted_tweet_id")
+    private Tweet quotedTweet;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "tweet")
     private List<Like> likes = new ArrayList<>();
 

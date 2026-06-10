@@ -25,11 +25,6 @@ public class UserController {
         return userService.findAll();
     }
 
-    @PostMapping("/")
-    public UserResponse save(@RequestBody CreateUserRequest request){
-        return userService.save(request);
-    }
-
     @PutMapping("/{id}")
     public UserResponse update(@PathVariable Long id,
                                @RequestBody UpdateUserRequest request){

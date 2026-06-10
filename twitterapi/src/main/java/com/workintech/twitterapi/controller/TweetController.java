@@ -1,5 +1,6 @@
 package com.workintech.twitterapi.controller;
 
+import com.workintech.twitterapi.dto.retweet.CreateQuoteRequest;
 import com.workintech.twitterapi.dto.tweet.CreateTweetRequest;
 import com.workintech.twitterapi.dto.tweet.TweetResponse;
 import com.workintech.twitterapi.dto.tweet.UpdateTweetRequest;
@@ -38,8 +39,13 @@ public class TweetController {
     }
 
     @PostMapping("/")
-    public TweetResponse save(@RequestBody CreateTweetRequest request){
+    public TweetResponse tweet(@RequestBody CreateTweetRequest request){
         return tweetService.save(request);
+    }
+
+    @PostMapping("/quote")
+    public TweetResponse quote(@RequestBody CreateQuoteRequest request) {
+        return tweetService.quote(request);
     }
 
     @PutMapping("/{id}")

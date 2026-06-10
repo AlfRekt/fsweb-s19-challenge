@@ -1,4 +1,4 @@
 package com.workintech.twitterapi.dto.like;
 
-public record CreateLikeRequest(Long userId, Long tweetId) {
+public record CreateLikeRequest(Long tweetId) {
 }

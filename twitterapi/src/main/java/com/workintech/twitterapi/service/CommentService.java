@@ -7,6 +7,7 @@ import com.workintech.twitterapi.entity.Tweet;
 import com.workintech.twitterapi.entity.User;
 import com.workintech.twitterapi.exception.BadRequestException;
 import com.workintech.twitterapi.exception.ResourceNotFoundException;
+import com.workintech.twitterapi.exception.UnauthorizedActionException;
 import com.workintech.twitterapi.repository.ICommentRepository;
 import com.workintech.twitterapi.repository.ITweetRepository;
 import com.workintech.twitterapi.repository.IUserRepository;
@@ -21,13 +22,15 @@ public class CommentService {
     private final ICommentRepository commentRepository;
     private final IUserRepository userRepository;
     private final ITweetRepository tweetRepository;
+    private final CurrentUserService currentUserService;
 
     @Autowired
 
-    public CommentService(ICommentRepository commentRepository,IUserRepository userRepository,ITweetRepository tweetRepository) {
+    public CommentService(ICommentRepository commentRepository,IUserRepository userRepository,ITweetRepository tweetRepository,CurrentUserService currentUserService) {
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
+        this.currentUserService = currentUserService;
     }
 
     public List<CommentResponse> findAll(){
@@ -46,8 +49,7 @@ public class CommentService {
     }
 
     public CommentResponse createComment(CreateCommentRequest request){
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = currentUserService.getCurrentUser();
         Tweet tweet = tweetRepository.findById(request.tweetId())
                         .orElseThrow(()-> new ResourceNotFoundException("Tweet not found"));
 
@@ -65,6 +67,11 @@ public class CommentService {
 
     public CommentResponse update(Long commentId,String content){
         Comment comment = findById(commentId);
+        User currentUser = currentUserService.getCurrentUser();
+
+        if (!comment.getUser().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedActionException("You can only update your own comment");
+        }
 
         if(comment.getContent().isBlank() || comment.getContent() == null){
             throw new BadRequestException("Comment data is empty");
@@ -77,6 +84,16 @@ public class CommentService {
 
     public CommentResponse delete(Long commentId){
         Comment comment = findById(commentId);
+        User currentUser = currentUserService.getCurrentUser();
+
+        Long commentOwnerId = comment.getUser().getId();
+        Long tweetOwnerId = comment.getTweet().getUser().getId();
+
+        if ((!commentOwnerId.equals(currentUser.getId())
+                || !tweetOwnerId.equals(currentUser.getId())) && !currentUserService.isAdmin(currentUser)) {
+            throw new UnauthorizedActionException("You cannot delete this comment");
+        }
+
         commentRepository.delete(comment);
         return toResponse(comment);
     }
